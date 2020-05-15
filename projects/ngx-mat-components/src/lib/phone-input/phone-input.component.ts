@@ -39,8 +39,6 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
     stateChanges: Subject<void> = new Subject<void>();
     @ViewChild('inputElement')
     inputElement: ElementRef;
-    private onChangeFn: any;
-    private onTouched: any;
 
     get type() {
         return this.controlType;
@@ -68,7 +66,7 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
     }
 
     get errorState() {
-        return !!this.ngControl.errors;
+        return !!this?.ngControl?.errors;
     }
 
     private _required = false;
@@ -125,6 +123,12 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
             this.stateChanges.next();
         });
     }
+
+    private onChangeFn: any = (_: any) => {
+    };
+
+    private onTouched: any = () => {
+    };
 
     ngAfterViewInit(): void {
         this.propagateValueToInput(this.value?.numberFormatted);
@@ -196,12 +200,14 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
     private leveOnlyPhoneChars(value: string) {
         // Leave only phone number chars
         const replacer = /\+|\*|\#|\d+/gi;
-        return value.replace(replacer, '');
+        const valuesList = value.match(replacer) ?? [];
+        return valuesList.join('');
     }
 
     private removeExtraCharacters(value: any) {
         // Leave only chars which might be inserted by the formatter
         const replacer = /\+|\*|\#|-|\(|\)|space|\d+/gi;
-        return value.replace(replacer, '');
+        const valuesList = value.match(replacer) ?? [];
+        return valuesList.join('');
     }
 }
