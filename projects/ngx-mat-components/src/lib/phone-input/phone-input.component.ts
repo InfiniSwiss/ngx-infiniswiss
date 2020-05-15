@@ -1,10 +1,12 @@
 import {FocusMonitor} from '@angular/cdk/a11y';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {
-    Component, OnInit, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, ViewChild
+    Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
+    ViewChild
 } from '@angular/core';
 import {NgControl, ControlValueAccessor} from '@angular/forms';
 import {MatFormFieldControl} from '@angular/material/form-field';
+import {CountryCode, formatIncompletePhoneNumber} from 'libphonenumber-js';
 import {Subject} from 'rxjs';
 
 interface PhoneInputModel {
@@ -22,18 +24,32 @@ interface PhoneInputModel {
         {provide: MatFormFieldControl, useExisting: PhoneInputComponent}
     ]
 })
-export class PhoneInputComponent implements OnInit, OnDestroy, MatFormFieldControl<PhoneInputModel>, ControlValueAccessor {
+export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFieldControl<string>, ControlValueAccessor {
     static nextId = 0;
+    @Input()
+    countryCode: CountryCode;
+    // TODO fix this
     readonly autofilled: boolean;
-    readonly controlType: string;
+    controlType = 'tel';
     focused = false;
     @HostBinding()
     readonly id: string = `ngx-mat-phone-input-${PhoneInputComponent.nextId++}`;
     @HostBinding('attr.aria-describedby')
     describedBy = '';
     stateChanges: Subject<void> = new Subject<void>();
+    @ViewChild('inputElement')
+    inputElement: ElementRef;
     private onChangeFn: any;
     private onTouched: any;
+
+    get type() {
+        return this.controlType;
+    }
+
+    @Input()
+    set type(value: string) {
+        this.controlType = value;
+    }
 
     private _disabled: boolean;
 
@@ -72,13 +88,14 @@ export class PhoneInputComponent implements OnInit, OnDestroy, MatFormFieldContr
         return this.focused || !this.empty;
     }
 
-    private _value: PhoneInputModel;
+    private _value: PhoneInputModel = {number: '', numberFormatted: ''};
+
     get value() {
         return this._value;
     }
 
-    set value(data: PhoneInputModel | null) {
-        this._value = data;
+    set value(data: any) {
+        this._value = {number: data, numberFormatted: formatIncompletePhoneNumber(this._value.number, this.countryCode)};
         this.stateChanges.next();
     }
 
@@ -109,8 +126,17 @@ export class PhoneInputComponent implements OnInit, OnDestroy, MatFormFieldContr
         });
     }
 
+    ngAfterViewInit(): void {
+        this.propagateValueToInput(this.value?.numberFormatted);
+    }
+
+    ngOnDestroy(): void {
+        this.stateChanges.complete();
+    }
+
     writeValue(obj: PhoneInputModel): void {
         this.value = obj;
+        this.propagateValueToInput(this.value.numberFormatted);
     }
 
     registerOnChange(fn: any): void {
@@ -135,14 +161,39 @@ export class PhoneInputComponent implements OnInit, OnDestroy, MatFormFieldContr
         this.describedBy = ids.join(' ');
     }
 
-    ngOnDestroy(): void {
-        this.stateChanges.complete();
+    handleInputChange() {
+        this.value.number = this.removeFormatting(this.inputElement.nativeElement.value);
+        this.value.numberFormatted = formatIncompletePhoneNumber(this.inputElement.nativeElement.value, this.countryCode);
+        if (this.value.number !== this.value.numberFormatted) {
+            this.propagateValueToInput(this.value.numberFormatted);
+        } else if (this.value.number !== this.inputElement.nativeElement.value) {
+            this.propagateValueToInput(this.value.number);
+        }
+        this.onChangeFn(this.value.number);
+        this.onTouched();
     }
 
-    ngOnInit() {
+    handleFocused() {
+        this.onTouched();
+        this.focused = true;
+        this.stateChanges.next();
     }
 
-    handleInputKeyUp($event: KeyboardEvent) {
+    handleFocusOut() {
+        this.focused = false;
+        this.stateChanges.next();
+    }
 
+    private propagateValueToInput(value) {
+        if (!this.inputElement) {
+            return;
+        }
+
+        this.inputElement.nativeElement.value = value;
+    }
+
+    private removeFormatting(value: string) {
+        const replacer = /\+|\*|\#|\d+/gi;
+        return value.replace(replacer, '');
     }
 }
