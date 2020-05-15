@@ -162,15 +162,16 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
     }
 
     handleInputChange() {
-        this.value.number = this.removeFormatting(this.inputElement.nativeElement.value);
-        this.value.numberFormatted = formatIncompletePhoneNumber(this.inputElement.nativeElement.value, this.countryCode);
-        if (this.value.number !== this.value.numberFormatted) {
+        const possibleValueInsideInput = this.removeExtraCharacters(this.inputElement.nativeElement.value);
+        this.value.number = this.leveOnlyPhoneChars(this.inputElement.nativeElement.value);
+        this.value.numberFormatted = formatIncompletePhoneNumber(possibleValueInsideInput, this.countryCode);
+        if (possibleValueInsideInput !== this.value.numberFormatted) {
             this.propagateValueToInput(this.value.numberFormatted);
-        } else if (this.value.number !== this.inputElement.nativeElement.value) {
+        } else if (possibleValueInsideInput !== this.inputElement.nativeElement.value) {
             this.propagateValueToInput(this.value.number);
         }
-        this.onChangeFn(this.value.number);
         this.onTouched();
+        this.onChangeFn(this.value.number);
     }
 
     handleFocused() {
@@ -192,8 +193,15 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
         this.inputElement.nativeElement.value = value;
     }
 
-    private removeFormatting(value: string) {
+    private leveOnlyPhoneChars(value: string) {
+        // Leave only phone number chars
         const replacer = /\+|\*|\#|\d+/gi;
+        return value.replace(replacer, '');
+    }
+
+    private removeExtraCharacters(value: any) {
+        // Leave only chars which might be inserted by the formatter
+        const replacer = /\+|\*|\#|-|\(|\)|space|\d+/gi;
         return value.replace(replacer, '');
     }
 }
