@@ -166,13 +166,15 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
     }
 
     handleInputChange() {
+        // TODO handle delete + backspace separately so we can format in reverse while deleting
+
         const possibleValueInsideInput = this.removeExtraCharacters(this.inputElement.nativeElement.value);
         this.value.number = this.leveOnlyPhoneChars(this.inputElement.nativeElement.value);
         this.value.numberFormatted = formatIncompletePhoneNumber(possibleValueInsideInput, this.countryCode);
         if (possibleValueInsideInput !== this.value.numberFormatted) {
             this.propagateValueToInput(this.value.numberFormatted);
         } else if (possibleValueInsideInput !== this.inputElement.nativeElement.value) {
-            this.propagateValueToInput(this.value.number);
+            this.propagateValueToInput(possibleValueInsideInput);
         }
         this.onTouched();
         this.onChangeFn(this.value.number);
@@ -206,8 +208,8 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
 
     private removeExtraCharacters(value: any) {
         // Leave only chars which might be inserted by the formatter
-        const replacer = /\+|\*|\#|-|\(|\)|space|\d+/gi;
+        const replacer = /\+|\*|\#|-|\(|\)| |\d+/gi;
         const valuesList = value.match(replacer) ?? [];
-        return valuesList.join('');
+        return valuesList.join('').trim();
     }
 }
