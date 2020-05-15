@@ -171,9 +171,10 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
         const possibleValueInsideInput = this.removeExtraCharacters(this.inputElement.nativeElement.value);
         this.value.number = this.leveOnlyPhoneChars(this.inputElement.nativeElement.value);
         this.value.numberFormatted = formatIncompletePhoneNumber(possibleValueInsideInput, this.countryCode);
-        if (possibleValueInsideInput !== this.value.numberFormatted) {
+
+        if (this.isFormattedValueDifferent(possibleValueInsideInput, this.value.numberFormatted)) {
             this.propagateValueToInput(this.value.numberFormatted);
-        } else if (possibleValueInsideInput !== this.inputElement.nativeElement.value) {
+        } else if (this.isFormattedValueDifferent(this.inputElement.nativeElement.value, possibleValueInsideInput)) {
             this.propagateValueToInput(possibleValueInsideInput);
         }
         this.onTouched();
@@ -211,5 +212,76 @@ export class PhoneInputComponent implements OnDestroy, AfterViewInit, MatFormFie
         const replacer = /\+|\*|\#|-|\(|\)| |\d+/gi;
         const valuesList = value.match(replacer) ?? [];
         return valuesList.join('').trim();
+    }
+
+    private isFormattedValueDifferent(possibleValueInsideInput: string, numberFormatted: string) {
+        const response = this.diffStrings(possibleValueInsideInput, numberFormatted);
+        if (!response.onlyFormattingCharactersFound) {
+            return true;
+        }
+        if (response.leftDifferentChars.length === 0 && response.rightDifferentChars.length === 0) {
+            return false;
+        }
+
+        if (response.rightDifferentChars.length === 1 && this.isFormattingCharacter(response.rightDifferentChars[0])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private isFormattingCharacter(char: string) {
+        return (
+            char === ')' ||
+            char === '(' ||
+            char === '-' ||
+            char === ' '
+        );
+    }
+
+    private diffStrings(leftValue: string, rightValue: string) {
+        const leftDifferentChars = [];
+        const rightDifferentChars = [];
+        const maxLength = Math.max(leftValue.length, rightValue.length);
+
+        for (let i = maxLength - 1; i >= 0; i--) {
+            if (i >= leftValue.length) {
+                if (!this.isFormattingCharacter(rightValue[i])) {
+                    return {
+                        leftDifferentChars,
+                        rightDifferentChars,
+                        onlyFormattingCharactersFound: false
+                    };
+                }
+                rightDifferentChars.push(rightValue[i]);
+            } else if (i >= rightValue.length) {
+                if (!this.isFormattingCharacter(leftValue[i])) {
+                    return {
+                        leftDifferentChars,
+                        rightDifferentChars,
+                        onlyFormattingCharactersFound: false
+                    };
+                }
+                leftDifferentChars.push(leftValue[i]);
+            } else if (leftValue[i] !== rightValue[i]) {
+                if (!this.isFormattingCharacter(leftValue[i]) ||
+                    !this.isFormattingCharacter(rightValue[i])) {
+                    return {
+                        leftDifferentChars,
+                        rightDifferentChars,
+                        onlyFormattingCharactersFound: false
+                    };
+                }
+
+                rightDifferentChars.push(rightValue[i]);
+                leftDifferentChars.push(leftValue[i]);
+            }
+        }
+
+        return {
+            leftDifferentChars,
+            rightDifferentChars,
+            onlyFormattingCharactersFound: true
+        };
     }
 }
