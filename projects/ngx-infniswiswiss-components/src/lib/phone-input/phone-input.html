@@ -1,7 +1,6 @@
 <input #inputElement
        (blur)="handleFocusChanged(false)"
        (focus)="handleFocusChanged(true)"
-       (keydown)="handleKeyDown($event)"
        (input)="updateValueAndFormatInput()"
        [attr.aria-describedby]="describedBy || null"
        [attr.aria-invalid]="errorState"

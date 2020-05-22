@@ -12,6 +12,7 @@ import {MatFormFieldControl} from '@angular/material/form-field';
 import {MAT_INPUT_VALUE_ACCESSOR} from '@angular/material/input';
 import {CountryCode, formatIncompletePhoneNumber} from 'libphonenumber-js';
 import {Subject} from 'rxjs';
+import {convertToString} from '../util/convert-to-string';
 
 interface PhoneInputModel {
     number: string;
@@ -350,27 +351,27 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
     }
 
-    handleKeyDown($event: KeyboardEvent) {
-        this.lastInsertedChar = $event.key;
-        this.inputWasBackspaceKeyPressed = $event.key === 'Backspace';
-        this.inputWasDeleteKeyPressed = $event.key === 'Delete';
-        const elementValue = this._elementRef.nativeElement.value;
-        const elementSelectionStart = this._elementRef.nativeElement.selectionStart;
-        const elementSelectionEnd = this._elementRef.nativeElement.selectionEnd;
-
-        this.inputDeletedString = null;
-        if (this.inputWasBackspaceKeyPressed) {
-            this.inputDeletedString = elementSelectionStart === elementSelectionEnd
-                ? elementValue.substr(elementSelectionStart - 1, 1)
-                : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-        } else if (this.inputWasDeleteKeyPressed) {
-            this.inputDeletedString = elementSelectionStart === elementSelectionEnd
-                ? elementValue.substr(elementSelectionStart, 1)
-                : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-        } else if (elementSelectionStart !== elementSelectionEnd) {
-            this.inputDeletedString = elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-        }
-    }
+    // handleKeyDown($event: KeyboardEvent) {
+    //     this.lastInsertedChar = $event.key;
+    //     this.inputWasBackspaceKeyPressed = $event.key === 'Backspace';
+    //     this.inputWasDeleteKeyPressed = $event.key === 'Delete';
+    //     const elementValue = this._elementRef.nativeElement.value;
+    //     const elementSelectionStart = this._elementRef.nativeElement.selectionStart;
+    //     const elementSelectionEnd = this._elementRef.nativeElement.selectionEnd;
+    //
+    //     this.inputDeletedString = null;
+    //     if (this.inputWasBackspaceKeyPressed) {
+    //         this.inputDeletedString = elementSelectionStart === elementSelectionEnd
+    //             ? elementValue.substr(elementSelectionStart - 1, 1)
+    //             : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
+    //     } else if (this.inputWasDeleteKeyPressed) {
+    //         this.inputDeletedString = elementSelectionStart === elementSelectionEnd
+    //             ? elementValue.substr(elementSelectionStart, 1)
+    //             : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
+    //     } else if (elementSelectionStart !== elementSelectionEnd) {
+    //         this.inputDeletedString = elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
+    //     }
+    // }
 
     updateValueAndFormatInput() {
         this.tryToFillWithFormattedValue();
@@ -403,9 +404,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     }
 
     private tryToFillWithFormattedValue() {
-        const currentInputValue = this._elementRef.nativeElement.value === undefined || this._elementRef.nativeElement.value == null
-            ? ''
-            : this._elementRef.nativeElement.value.toString();
+        const currentInputValue = convertToString(this._elementRef.nativeElement.value);
         this.value.number = this.clearInvalidCharacters(currentInputValue);
         this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
 
@@ -417,15 +416,10 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
             return;
         }
 
-        if (this.isFormattingCharacter(this.inputDeletedString) ||
-            currentInputValue === this.value.numberFormatted) {
-            return;
-        }
-
-        const wasNumberFormatted = /\(|\)|-| /.test(this.value.numberFormatted);
+        const isInputFormatted = /\(|\)|-| /.test(this.value.numberFormatted);
         const inputContainsFormatting = /\(|\)|-| /.test(currentInputValue);
-        if (!wasNumberFormatted && inputContainsFormatting) {
-            // Is this case the number was formatted before but not it shouldn't be cause it doesn't match the format
+        if (!isInputFormatted && inputContainsFormatting) {
+            // Number was formatted but not it's invalid and we cannot format it
             this.resetInputFormatting(currentInputValue);
             return;
         }
@@ -440,10 +434,10 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         const initialSelectionEnd = selectionEnd;
         for (let i = 0; i < currentInputValue.length; i++) {
             const isFormattingChar = this.isFormattingCharacter(currentInputValue[i]);
-            if (isFormattingChar && initialSelectionStart >= i) {
+            if (isFormattingChar && initialSelectionStart > i) {
                 selectionStart--;
                 selectionEnd--;
-            } else if (isFormattingChar && initialSelectionEnd >= i) {
+            } else if (isFormattingChar && initialSelectionEnd > i) {
                 selectionEnd--;
             }
         }
