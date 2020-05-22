@@ -2,7 +2,6 @@
        (blur)="handleFocusChanged(false)"
        (focus)="handleFocusChanged(true)"
        (input)="updateValueAndFormatInput()"
-       (keydown)="handleKeyDown($event)"
        [attr.aria-describedby]="describedBy || null"
        [attr.aria-invalid]="errorState"
        [attr.aria-required]="required.toString()"

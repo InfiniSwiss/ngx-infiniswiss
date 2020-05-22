@@ -156,10 +156,6 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      */
     @ViewChild('inputElement')
     public readonly _elementRef: ElementRef;
-    private inputWasBackspaceKeyPressed: boolean;
-    private inputWasDeleteKeyPressed: boolean;
-    private inputDeletedString: string;
-    private lastInsertedChar: string;
 
     /**
      * Implemented as part of MatFormFieldControl. and PhoneHandling
@@ -350,28 +346,6 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
     }
 
-    handleKeyDown($event: KeyboardEvent) {
-        this.lastInsertedChar = $event.key;
-        this.inputWasBackspaceKeyPressed = $event.key === 'Backspace';
-        this.inputWasDeleteKeyPressed = $event.key === 'Delete';
-        const elementValue = this._elementRef.nativeElement.value;
-        const elementSelectionStart = this._elementRef.nativeElement.selectionStart;
-        const elementSelectionEnd = this._elementRef.nativeElement.selectionEnd;
-
-        this.inputDeletedString = null;
-        if (this.inputWasBackspaceKeyPressed) {
-            this.inputDeletedString = elementSelectionStart === elementSelectionEnd
-                ? elementValue.substr(elementSelectionStart - 1, 1)
-                : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-        } else if (this.inputWasDeleteKeyPressed) {
-            this.inputDeletedString = elementSelectionStart === elementSelectionEnd
-                ? elementValue.substr(elementSelectionStart, 1)
-                : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-        } else if (elementSelectionStart !== elementSelectionEnd) {
-            this.inputDeletedString = elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-        }
-    }
-
     updateValueAndFormatInput() {
         this.tryToFillWithFormattedValue();
         this.onTouched();
@@ -389,7 +363,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     private clearInvalidCharacters(value: string) {
         const isPlusOnFirstPosition = value[0] === '+';
         const validCharsRegex = /\#|\*|\d/gi;
-        let newValue = value.match(validCharsRegex) ?? [];
+        const newValue = value.match(validCharsRegex) ?? [];
         return isPlusOnFirstPosition ? `+${newValue.join('')}` : newValue.join('');
     }
 
@@ -408,17 +382,14 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
             : this._elementRef.nativeElement.value.toString();
         this.value.number = this.clearInvalidCharacters(currentInputValue);
 
-        const isInputNotValidForFormatting = /\#|\*/.test(currentInputValue);
-        if (isInputNotValidForFormatting) {
+        const hasAllowedCharactersButInvalidForFormatting = /\#|\*/.test(currentInputValue);
+        if (hasAllowedCharactersButInvalidForFormatting) {
             this.value.numberFormatted = this.value.number;
             this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
             return;
         }
-        this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
 
-        if (this.isFormattingCharacter(this.inputDeletedString) ||
-            currentInputValue === this.value.numberFormatted) {
-        }
+        this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
 
         const wasNumberFormatted = /\(|\)|-| /.test(this.value.numberFormatted);
         const inputContainsFormatting = /\(|\)|-| /.test(currentInputValue);
