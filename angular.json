@@ -7,7 +7,7 @@
       "projectType": "library",
       "root": "projects/ngx-mat-components",
       "sourceRoot": "projects/ngx-mat-components/src",
-      "prefix": "lib",
+      "prefix": "ngx",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-ng-packagr:build",

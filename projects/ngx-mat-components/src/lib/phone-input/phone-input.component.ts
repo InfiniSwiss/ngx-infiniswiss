@@ -381,22 +381,25 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
             ? ''
             : this._elementRef.nativeElement.value.toString();
         this.value.number = this.clearInvalidCharacters(currentInputValue);
+        this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
 
         const hasAllowedCharactersButInvalidForFormatting = /\#|\*/.test(currentInputValue);
         if (hasAllowedCharactersButInvalidForFormatting) {
+            // In this case user inserted # | * which is valid in some cases but the formatter will remove it
             this.value.numberFormatted = this.value.number;
             this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
             return;
         }
 
-        this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
-
         const wasNumberFormatted = /\(|\)|-| /.test(this.value.numberFormatted);
         const inputContainsFormatting = /\(|\)|-| /.test(currentInputValue);
         if (!wasNumberFormatted && inputContainsFormatting) {
+            // Is this case the number was formatted before but not it shouldn't be cause it doesn't match the format
             this.resetInputFormatting(currentInputValue);
             return;
         }
+
+        // Happy case user writes and we format in the same time so we need to replace the number but keep cursor position
         this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
     }
 
