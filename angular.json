@@ -3,46 +3,6 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ngx-mat-components": {
-      "projectType": "library",
-      "root": "projects/ngx-mat-components",
-      "sourceRoot": "projects/ngx-mat-components/src",
-      "prefix": "ngx",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
-          "options": {
-            "tsConfig": "projects/ngx-mat-components/tsconfig.lib.json",
-            "project": "projects/ngx-mat-components/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ngx-mat-components/tsconfig.lib.prod.json"
-            }
-          }
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "projects/ngx-mat-components/src/test.ts",
-            "tsConfig": "projects/ngx-mat-components/tsconfig.spec.json",
-            "karmaConfig": "projects/ngx-mat-components/karma.conf.js"
-          }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "projects/ngx-mat-components/tsconfig.lib.json",
-              "projects/ngx-mat-components/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
-            ]
-          }
-        }
-      }
-    },
     "playground": {
       "projectType": "application",
       "schematics": {
@@ -162,6 +122,46 @@
             "production": {
               "devServerTarget": "playground:serve:production"
             }
+          }
+        }
+      }
+    },
+    "ngx-infniswiswiss-components": {
+      "projectType": "library",
+      "root": "projects/ngx-infniswiswiss-components",
+      "sourceRoot": "projects/ngx-infniswiswiss-components/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/ngx-infniswiswiss-components/tsconfig.lib.json",
+            "project": "projects/ngx-infniswiswiss-components/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ngx-infniswiswiss-components/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/ngx-infniswiswiss-components/src/test.ts",
+            "tsConfig": "projects/ngx-infniswiswiss-components/tsconfig.spec.json",
+            "karmaConfig": "projects/ngx-infniswiswiss-components/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/ngx-infniswiswiss-components/tsconfig.lib.json",
+              "projects/ngx-infniswiswiss-components/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
           }
         }
       }

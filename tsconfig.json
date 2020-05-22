@@ -16,9 +16,9 @@
       "dom"
     ],
     "paths": {
-      "ngx-mat-components": [
-        "dist/ngx-mat-components/ngx-mat-components",
-        "dist/ngx-mat-components"
+      "ngx-infniswiswiss-components": [
+        "dist/ngx-infniswiswiss-components/ngx-infniswiswiss-components",
+        "dist/ngx-infniswiswiss-components"
       ]
     }
   },
