@@ -341,8 +341,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     handleFocusChanged(isFocused: boolean) {
         // On focus out try to format one more time
         if (!isFocused) {
-            this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
-            this._elementRef.nativeElement.value = this.value.numberFormatted;
+            this.updateValueAndFormatInput();
         }
         if (isFocused !== this.focused && (!this.readonly || !isFocused)) {
             this.onTouched();
@@ -373,8 +372,8 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
     }
 
-    handleInputChange() {
-        this.tryPropagateFormattedValue();
+    updateValueAndFormatInput() {
+        this.tryToFillWithFormattedValue();
         this.onTouched();
         this.onChangeFn(this.value.number);
     }
@@ -389,9 +388,9 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
 
     private clearInvalidCharacters(value: string) {
         const isPlusOnFirstPosition = value[0] === '+';
-        const validCharsRegex = /\d/gi;
-        const newValue = value.match(validCharsRegex).join('');
-        return isPlusOnFirstPosition ? `+${newValue}` : newValue;
+        const validCharsRegex = /\#|\*|\d/gi;
+        let newValue = value.match(validCharsRegex) ?? [];
+        return isPlusOnFirstPosition ? `+${newValue.join('')}` : newValue.join('');
     }
 
     private isFormattingCharacter(char: string) {
@@ -403,16 +402,22 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         );
     }
 
-    private tryPropagateFormattedValue() {
+    private tryToFillWithFormattedValue() {
         const currentInputValue = this._elementRef.nativeElement.value === undefined || this._elementRef.nativeElement.value == null
             ? ''
             : this._elementRef.nativeElement.value.toString();
         this.value.number = this.clearInvalidCharacters(currentInputValue);
+
+        const isInputNotValidForFormatting = /\#|\*/.test(currentInputValue);
+        if (isInputNotValidForFormatting) {
+            this.value.numberFormatted = this.value.number;
+            this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
+            return;
+        }
         this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
 
         if (this.isFormattingCharacter(this.inputDeletedString) ||
             currentInputValue === this.value.numberFormatted) {
-            return;
         }
 
         const wasNumberFormatted = /\(|\)|-| /.test(this.value.numberFormatted);
@@ -421,8 +426,6 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
             this.resetInputFormatting(currentInputValue);
             return;
         }
-        // if (this.lastInsertedChar === '+' || )
-
         this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
     }
 
