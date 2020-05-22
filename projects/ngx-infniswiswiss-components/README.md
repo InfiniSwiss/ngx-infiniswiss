@@ -1,6 +1,10 @@
-# NgxInfniswiswissComponents
+# Ngx Infniswiswiss Components
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.7.
+Open source components for angular
+
+| Component Name | Demo link |
+|---	|---	|
+|Phone input |  [here](https://codesandbox.io/s/stoic-cdn-8g7mi?file=/src/app/app.component.html:216-239) |
 
 ## Code scaffolding
 
