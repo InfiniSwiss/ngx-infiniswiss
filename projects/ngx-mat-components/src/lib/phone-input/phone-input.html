@@ -1,1 +1,16 @@
-<input #inputElement (focusin)="handleFocused()" (focusout)="handleFocusOut()" (input)="handleInputChange()" [type]="type"/>
+<input #inputElement
+       (blur)="handleFocusChanged(false)"
+       (focus)="handleFocusChanged(true)"
+       (input)="handleInputChange()"
+       (keydown)="handleKeyDown($event)"
+       [attr.aria-describedby]="describedBy || null"
+       [attr.aria-invalid]="errorState"
+       [attr.aria-required]="required.toString()"
+       [attr.id]="id"
+       [attr.placeholder]="placeholder"
+       [attr.readonly]="readonly || null"
+       [class.mat-input-server]="_isServer"
+       [disabled]="disabled"
+       [required]="required"
+       [type]="controlType"
+       class="mat-input-element mat-form-field-autofill-control"/>
