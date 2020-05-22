@@ -1,5 +1,6 @@
-import * as uuid from 'uuid';
+let uuidNumber = -1;
 
 export function generateUuid(): string {
-    return uuid();
+    uuidNumber++;
+    return `next-uuid-${uuidNumber}`;
 }

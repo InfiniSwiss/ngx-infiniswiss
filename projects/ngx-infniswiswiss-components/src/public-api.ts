@@ -5,6 +5,7 @@
 export * from './lib/phone-input/phone-input.module';
 export * from './lib/phone-input/phone-input.component';
 
+export * from './lib/state-management/state-management-services.module';
 export * from './lib/state-management/state-management.module';
 export * from './lib/state-management/app-loader.service';
 export * from './lib/state-management/component-loader.interface';
