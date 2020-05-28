@@ -1,7 +1,19 @@
-<mat-form-field>
-    <ngx-phone-input placeholder="Phone number" countryCode="US"></ngx-phone-input>
-</mat-form-field>
-
-<mat-form-field>
-  <ngx-phone-input placeholder="Phone number ro" countryCode="RO"></ngx-phone-input>
-</mat-form-field>
+<div style="display: flex; flex-direction: column">
+    <div class="toggle-country-code-example">
+        <div class="toggle-country-code-row">
+            <mat-form-field>
+                <mat-placeholder>Select code</mat-placeholder>
+                <mat-select [(value)]="countryCode">
+                    <mat-option *ngFor="let o of countryCodesList" [value]="o">
+                        {{o}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="toggle-country-code-row">
+            <mat-form-field>
+                <ngx-phone-input [value]="'0774234567'" [countryCode]="countryCode" placeholder="Phone number"></ngx-phone-input>
+            </mat-form-field>
+        </div>
+    </div>
+</div>

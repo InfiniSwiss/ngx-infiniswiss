@@ -2,6 +2,7 @@ import {FocusMonitor} from '@angular/cdk/a11y';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {Platform} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
+import {isDefined} from '@angular/compiler/src/util';
 import {
     Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
     ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject
@@ -13,6 +14,7 @@ import {MAT_INPUT_VALUE_ACCESSOR} from '@angular/material/input';
 import {CountryCode, formatIncompletePhoneNumber} from 'libphonenumber-js';
 import {Subject} from 'rxjs';
 import {convertToString} from '../util/convert-to-string';
+import {isChanged} from '../util/is-changed';
 
 interface PhoneInputModel {
     number: string;
@@ -98,7 +100,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      * Implemented as part phone number input handling.
      */
     public get empty() {
-        return !this.value.numberFormatted && !this.autofilled;
+        return !this.internalValue.numberFormatted && !this.autofilled;
     }
 
     /**
@@ -157,22 +159,24 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      */
     @ViewChild('inputElement')
     public readonly _elementRef: ElementRef;
-    private inputWasBackspaceKeyPressed: boolean;
-    private inputWasDeleteKeyPressed: boolean;
-    private inputDeletedString: string;
-    private lastInsertedChar: string;
+
+    @Input()
+    set value(data: any) {
+        this.writeValue(data);
+    }
 
     /**
      * Implemented as part of MatFormFieldControl. and PhoneHandling
      */
-    private _value: PhoneInputModel = {number: '', numberFormatted: ''};
-    get value() {
-        return this._value;
+    private _internalValue: PhoneInputModel = {number: '', numberFormatted: ''};
+    get internalValue() {
+        return this._internalValue;
     }
 
-    set value(data: any) {
-        if (typeof data === 'string' && data !== this._value.number) {
-            this._value = {number: data, numberFormatted: this.formatPhoneNumber(data)};
+    @Input()
+    set internalValue(data: any) {
+        if (typeof data === 'string' && data !== this._internalValue.number) {
+            this._internalValue = {number: data, numberFormatted: this.formatPhoneNumber(data)};
             this.stateChanges.next();
         }
     }
@@ -197,7 +201,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
 
         this.id = this.id;
 
-        this._previousNativeValue = this.value.numberFormatted;
+        this._previousNativeValue = this.internalValue.numberFormatted;
         // Replace the provider from above with this.
         if (this.ngControl != null) {
             // Setting the value accessor directly (instead of using
@@ -226,18 +230,23 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
+        if ((isChanged(changes.countryCode)) && this._elementRef) {
+            this.internalValue.numberFormatted = this.formatPhoneNumber(this.internalValue.number);
+            this.propagateValueToInput(this.internalValue.number);
+        }
         this.stateChanges.next();
     }
 
     private _dirtyCheckNativeValue() {
-        if (this._previousNativeValue !== this.value.numberFormatted) {
-            this._previousNativeValue = this.value.numberFormatted;
+        if (this._previousNativeValue !== this.internalValue.numberFormatted) {
+            this._previousNativeValue = this.internalValue.numberFormatted;
             this.stateChanges.next();
         }
     }
 
     ngAfterViewInit(): void {
-        this.propagateValueToInput(this.value?.numberFormatted);
+        this.internalValue.numberFormatted = this.formatPhoneNumber(this.internalValue.number);
+        this.propagateValueToInput(this.internalValue?.numberFormatted);
         // On some versions of iOS the caret gets stuck in the wrong place when holding down the delete
         // key. In order to get around this we need to "jiggle" the caret loose. Since this bug only
         // exists on iOS, we only bother to install the listener on iOS.
@@ -288,8 +297,8 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      * Implemented as part of ControlValueAccessor.
      */
     writeValue(obj: PhoneInputModel): void {
-        this.value = obj;
-        this.propagateValueToInput(this.value.numberFormatted);
+        this.internalValue = obj;
+        this.propagateValueToInput(this.internalValue.numberFormatted);
     }
 
     /**
@@ -351,32 +360,10 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
     }
 
-    // handleKeyDown($event: KeyboardEvent) {
-    //     this.lastInsertedChar = $event.key;
-    //     this.inputWasBackspaceKeyPressed = $event.key === 'Backspace';
-    //     this.inputWasDeleteKeyPressed = $event.key === 'Delete';
-    //     const elementValue = this._elementRef.nativeElement.value;
-    //     const elementSelectionStart = this._elementRef.nativeElement.selectionStart;
-    //     const elementSelectionEnd = this._elementRef.nativeElement.selectionEnd;
-    //
-    //     this.inputDeletedString = null;
-    //     if (this.inputWasBackspaceKeyPressed) {
-    //         this.inputDeletedString = elementSelectionStart === elementSelectionEnd
-    //             ? elementValue.substr(elementSelectionStart - 1, 1)
-    //             : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-    //     } else if (this.inputWasDeleteKeyPressed) {
-    //         this.inputDeletedString = elementSelectionStart === elementSelectionEnd
-    //             ? elementValue.substr(elementSelectionStart, 1)
-    //             : elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-    //     } else if (elementSelectionStart !== elementSelectionEnd) {
-    //         this.inputDeletedString = elementValue.substr(elementSelectionStart, elementSelectionEnd - elementSelectionStart);
-    //     }
-    // }
-
     updateValueAndFormatInput() {
         this.tryToFillWithFormattedValue();
         this.onTouched();
-        this.onChangeFn(this.value.number);
+        this.onChangeFn(this.internalValue.number);
     }
 
     private propagateValueToInput(value) {
@@ -404,19 +391,22 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     }
 
     private tryToFillWithFormattedValue() {
+        if (!this._elementRef) {
+            return;
+        }
         const currentInputValue = convertToString(this._elementRef.nativeElement.value);
-        this.value.number = this.clearInvalidCharacters(currentInputValue);
-        this.value.numberFormatted = this.formatPhoneNumber(this.value.number);
+        this.internalValue.number = this.clearInvalidCharacters(currentInputValue);
+        this.internalValue.numberFormatted = this.formatPhoneNumber(this.internalValue.number);
 
         const hasAllowedCharactersButInvalidForFormatting = /\#|\*/.test(currentInputValue);
         if (hasAllowedCharactersButInvalidForFormatting) {
             // In this case user inserted # | * which is valid in some cases but the formatter will remove it
-            this.value.numberFormatted = this.value.number;
-            this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
+            this.internalValue.numberFormatted = this.internalValue.number;
+            this.setValueAndRememberCursorPosition(currentInputValue, this.internalValue.numberFormatted);
             return;
         }
 
-        const isInputFormatted = /\(|\)|-| /.test(this.value.numberFormatted);
+        const isInputFormatted = /\(|\)|-| /.test(this.internalValue.numberFormatted);
         const inputContainsFormatting = /\(|\)|-| /.test(currentInputValue);
         if (!isInputFormatted && inputContainsFormatting) {
             // Number was formatted but not it's invalid and we cannot format it
@@ -425,65 +415,68 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
 
         // Happy case user writes and we format in the same time so we need to replace the number but keep cursor position
-        this.setValueAndRememberCursorPosition(currentInputValue, this.value.numberFormatted);
+        this.setValueAndRememberCursorPosition(currentInputValue, this.internalValue.numberFormatted);
     }
 
     private resetInputFormatting(currentInputValue) {
         let {selectionStart, selectionEnd} = this.getInputSelection();
-        const initialSelectionStart = selectionStart;
-        const initialSelectionEnd = selectionEnd;
-        for (let i = 0; i < currentInputValue.length; i++) {
-            const isFormattingChar = this.isFormattingCharacter(currentInputValue[i]);
-            if (isFormattingChar && initialSelectionStart > i) {
-                selectionStart--;
-                selectionEnd--;
-            } else if (isFormattingChar && initialSelectionEnd > i) {
-                selectionEnd--;
+        if (isDefined(selectionStart) && isDefined(selectionEnd)) {
+            const initialSelectionStart = selectionStart;
+            const initialSelectionEnd = selectionEnd;
+            for (let i = 0; i < currentInputValue.length; i++) {
+                const isFormattingChar = this.isFormattingCharacter(currentInputValue[i]);
+                if (isFormattingChar && initialSelectionStart > i) {
+                    selectionStart--;
+                    selectionEnd--;
+                } else if (isFormattingChar && initialSelectionEnd > i) {
+                    selectionEnd--;
+                }
             }
         }
-
-        this.setInputValue(this.value.number, selectionStart, selectionEnd);
+        this.setInputValue(this.internalValue.number, selectionStart, selectionEnd);
     }
 
     private setValueAndRememberCursorPosition(inputCurrentValue: string, valueToSet: string) {
         let {selectionStart, selectionEnd} = this.getInputSelection();
-        const initialSelectionEnd = selectionEnd;
-        let inputIndex = 0;
-        let valueToSetIndex = 0;
-        // Go from start to end of selection
-        while (inputIndex < initialSelectionEnd) {
-            const charToCheck = inputCurrentValue[inputIndex];
-            const shouldUpdateSelectionIndexes = charToCheck !== valueToSet[valueToSetIndex];
-            // Check if we dont need to compute a new selection index and update the other iterator index if not
-            if (!shouldUpdateSelectionIndexes) {
-                valueToSetIndex++;
-            } else if (valueToSetIndex < valueToSet.length) {
-                // Compute a new selection index by finding the next value which is the same
-                let j = valueToSetIndex;
-                let possibleNextStart = selectionStart;
-                let possibleNextEnd = selectionEnd;
+        if (isDefined(selectionStart) && isDefined(selectionEnd)) {
+            const initialSelectionEnd = selectionEnd;
+            let inputIndex = 0;
+            let valueToSetIndex = 0;
+            // Go from start to end of selection
+            while (inputIndex < initialSelectionEnd) {
+                const charToCheck = inputCurrentValue[inputIndex];
+                const shouldUpdateSelectionIndexes = charToCheck !== valueToSet[valueToSetIndex];
+                // Check if we dont need to compute a new selection index and update the other iterator index if not
+                if (!shouldUpdateSelectionIndexes) {
+                    valueToSetIndex++;
+                } else if (valueToSetIndex < valueToSet.length) {
+                    // Compute a new selection index by finding the next value which is the same
+                    let j = valueToSetIndex;
+                    let possibleNextStart = selectionStart;
+                    let possibleNextEnd = selectionEnd;
 
-                while (j < valueToSet.length && valueToSet[j] !== charToCheck) {
-                    if (j <= possibleNextStart) {
-                        possibleNextStart++;
+                    while (j < valueToSet.length && valueToSet[j] !== charToCheck) {
+                        if (j <= possibleNextStart) {
+                            possibleNextStart++;
+                        }
+                        if (j <= possibleNextEnd) {
+                            possibleNextEnd++;
+                        }
+                        j++;
                     }
-                    if (j <= possibleNextEnd) {
-                        possibleNextEnd++;
+                    // Char was found
+                    if (valueToSet[j] === charToCheck) {
+                        selectionStart = possibleNextStart;
+                        selectionEnd = possibleNextEnd;
+                        // We are on the last index which was already checked
+                        valueToSetIndex = j + 1;
+                    } else {
+                        selectionStart--;
+                        selectionEnd--;
                     }
-                    j++;
                 }
-                // Char was found
-                if (valueToSet[j] === charToCheck) {
-                    selectionStart = possibleNextStart;
-                    selectionEnd = possibleNextEnd;
-                    // We are on the last index which was already checked
-                    valueToSetIndex = j + 1;
-                } else {
-                    selectionStart--;
-                    selectionEnd--;
-                }
+                inputIndex++;
             }
-            inputIndex++;
         }
 
         this.setInputValue(valueToSet, selectionStart, selectionEnd);
@@ -498,10 +491,12 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     }
 
     private setInputValue(valueToSet: string, selectionStart: number, selectionEnd: number) {
-        selectionStart = Math.min(valueToSet.length, selectionStart);
-        selectionEnd = Math.min(valueToSet.length, selectionEnd);
         this._elementRef.nativeElement.value = valueToSet;
-        this._elementRef.nativeElement.setSelectionRange(selectionStart, selectionEnd, 'forward');
+        if (isDefined(selectionStart) && isDefined(selectionEnd)) {
+            selectionStart = Math.min(valueToSet.length, selectionStart);
+            selectionEnd = Math.min(valueToSet.length, selectionEnd);
+            this._elementRef.nativeElement.setSelectionRange(selectionStart, selectionEnd, 'forward');
+        }
     }
 
     private formatPhoneNumber(value: string) {
