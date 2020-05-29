@@ -7,7 +7,8 @@ import {Component} from '@angular/core';
 })
 export class AppComponent {
     title = 'playground';
-    countryCode = 'RO';
+    countryCode = 'US';
+    countryCodeSecond = 'US';
     countryCodesList = [
         'RO',
         'GB',

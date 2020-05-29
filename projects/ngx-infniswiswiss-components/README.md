@@ -4,7 +4,7 @@ Open source components for angular
 
 | Component Name | Demo link |
 |---	|---	|
-|Phone input |  [here](https://codesandbox.io/s/optimistic-hopper-oxp3m?file=/src/app/app.component.html:216-239) |
+|Phone input |  [here](https://codesandbox.io/s/mystifying-stonebraker-59q1g?file=/src/app/app.module.ts) |
 
 ## Code scaffolding
 

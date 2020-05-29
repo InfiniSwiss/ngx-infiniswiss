@@ -442,14 +442,30 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
             this.internalValue.numberFormatted = inputValue.numberFormatted;
         }
         this.onTouched();
-        console.log(this.internalValue.number);
         this.onChangeFn(this.internalValue.number);
     }
 
     handleCountryCodeChange($event: CountryCode) {
         const selectedCountry = this.prefixProvider.countriesList.find(c => c.code === $event);
-        this.internationalPrefix = selectedCountry?.phoneNumberCode;
-        this.updateValueAndFormatInput();
+        let phoneNumberValue = this.internalValue.number;
+        // Remove old prefix if it was set
+        if (this.internationalPrefix && this.internalValue.number.startsWith(this.internationalPrefix)) {
+            phoneNumberValue = phoneNumberValue.substring(this.internationalPrefix.length, phoneNumberValue.length);
+        }
+        this.internationalPrefix = convertToString(selectedCountry?.phoneNumberCode);
+        const isPhoneAlreadyStartingWithPrefix = phoneNumberValue.startsWith(this.internationalPrefix);
+        if (!isPhoneAlreadyStartingWithPrefix && phoneNumberValue.startsWith('+')) {
+            // Remove leading + cause it's part of the prefix
+            phoneNumberValue = this.internationalPrefix + phoneNumberValue.substring(1, phoneNumberValue.length);
+        } else if (!isPhoneAlreadyStartingWithPrefix && phoneNumberValue.length) {
+            phoneNumberValue = this.internationalPrefix + phoneNumberValue;
+        }
+        this.updateInternalValueWithoutTriggeringChanges({
+            number: phoneNumberValue,
+            countryCode: $event
+        });
+        this.onTouched();
+        this.onChangeFn(phoneNumberValue);
     }
 
     updateLastKeyDown($event: KeyboardEvent) {

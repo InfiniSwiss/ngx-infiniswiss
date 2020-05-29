@@ -11,10 +11,19 @@ export class PhoneInputFillService {
         ignoredPrefix = convertToString(ignoredPrefix);
         const pureNumber = ignoredPrefix + this.clearInvalidCharacters(originalValue);
         const hasAllowedCharactersButInvalidForFormatting = /\#|\*/.test(originalValue);
-        let numberFormatted = hasAllowedCharactersButInvalidForFormatting
-            ? pureNumber
-            : formatIncompletePhoneNumber(pureNumber, countryCode);
-        numberFormatted = numberFormatted.substring(ignoredPrefix.length, numberFormatted.length).trim();
+        let numberFormatted = '';
+        try {
+            numberFormatted = hasAllowedCharactersButInvalidForFormatting
+                ? pureNumber
+                : formatIncompletePhoneNumber(pureNumber, countryCode);
+            numberFormatted = numberFormatted.substring(ignoredPrefix.length, numberFormatted.length).trim();
+        } catch (e) {
+            numberFormatted = pureNumber;
+        }
+        if (pureNumber === ignoredPrefix) {
+            return {number: '', numberFormatted: ''};
+        }
+
         return {numberFormatted, number: pureNumber};
     }
 

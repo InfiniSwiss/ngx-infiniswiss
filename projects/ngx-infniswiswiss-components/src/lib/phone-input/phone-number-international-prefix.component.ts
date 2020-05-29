@@ -7,6 +7,13 @@ import {isChangedAndHasValue} from '../util/is-changed';
 import {DEFAULT_COUNTRY_LIST} from './metadata/phone-numbers-by-country';
 import {CountryModel} from './phone-tokens';
 
+const DEFAULT_COUNTRY_CODE_VALUE = {
+    phoneNumberCode: '',
+    code: '' as CountryCode,
+    flagClass: '',
+    name: ''
+};
+
 @Component({
     selector: 'ngx-phone-number-international-prefix',
     templateUrl: 'phone-number-international-prefix.html',
@@ -31,7 +38,7 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges {
     public visibleCountries$: Observable<CountryModel[]>;
     private _visibleCountries$ = new BehaviorSubject<CountryModel[]>([]);
     private internalCountries: CountryModel[];
-    private readonly selectedCountry: BehaviorSubject<CountryModel> = new BehaviorSubject<CountryModel>(null);
+    private readonly selectedCountry: BehaviorSubject<CountryModel> = new BehaviorSubject<CountryModel>(DEFAULT_COUNTRY_CODE_VALUE);
 
     constructor() {
         this.updateInternalCountries();
@@ -81,11 +88,6 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges {
             return;
         }
         const country = this.internalCountries.find(el => el.code === this.countryCode);
-        this.selectedCountry.next(country ?? {
-            phoneNumberCode: '',
-            code: '' as CountryCode,
-            flagClass: '',
-            name: ''
-        });
+        this.selectedCountry.next(country ?? DEFAULT_COUNTRY_CODE_VALUE);
     }
 }
