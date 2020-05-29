@@ -15,7 +15,7 @@ import {AppComponent} from './app.component';
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
-        PhoneInputModule,
+        PhoneInputModule.forRoot(),
         MatFormFieldModule,
         MatButtonModule,
         MatSelectModule
