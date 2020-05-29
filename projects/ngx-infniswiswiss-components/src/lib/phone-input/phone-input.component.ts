@@ -2,7 +2,6 @@ import {FocusMonitor} from '@angular/cdk/a11y';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {Platform} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
-import {isDefined} from '@angular/compiler/src/util';
 import {
     Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
     ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject
@@ -16,9 +15,9 @@ import {Subject, BehaviorSubject, Subscription} from 'rxjs';
 import {filter, debounceTime, takeUntil} from 'rxjs/operators';
 import {convertToString} from '../util/convert-to-string';
 import {isChanged} from '../util/is-changed';
+import {isInitialized} from '../util/is-initialized';
 import {PhoneInputFillService} from './phone-input-fill.service';
-import {PhoneNumberInternationalPrefixComponent} from './phone-number-international-prefix.component';
-import {CountryModel} from './phone-tokens';
+import {CountryModel, PhoneInputPrefixProvider} from './phone-tokens';
 
 interface PhoneInputModel {
     number: string;
@@ -162,7 +161,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     public countryCode: CountryCode;
 
     @Input()
-    public prefixProvider: PhoneNumberInternationalPrefixComponent;
+    public prefixProvider: PhoneInputPrefixProvider;
     /**
      * Implemented as part phone number handling.
      */
@@ -245,7 +244,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         this._isServer = !this._platform.isBrowser;
 
         this.setInternalDataAndUpdateInput$.pipe(
-            filter(v => v && isDefined(v.countryCode)),
+            filter(v => v && isInitialized(v.countryCode)),
             debounceTime(0),
             takeUntil(this.onDestroy)
         ).subscribe(data => {
@@ -254,7 +253,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
                 this.prefixProvider.countryCode = this.countryCode;
                 this.prefixProvider.updateSelectedCountryCode();
             }
-            if (this.prefixProvider && isDefined(data.countryCode) && isDefined(this.prefixProvider.countriesList)) {
+            if (this.prefixProvider && isInitialized(data.countryCode) && isInitialized(this.prefixProvider.countriesList)) {
                 const country = data.countriesList.find(c => c.code === data.countryCode);
                 this.internationalPrefix = convertToString(country?.phoneNumberCode);
                 data.number = convertToString(data.number);

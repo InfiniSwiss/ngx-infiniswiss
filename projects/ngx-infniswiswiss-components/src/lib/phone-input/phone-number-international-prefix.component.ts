@@ -5,7 +5,7 @@ import {BehaviorSubject, Observable} from 'rxjs';
 import {filter, switchMap, startWith, map} from 'rxjs/operators';
 import {isChangedAndHasValue} from '../util/is-changed';
 import {DEFAULT_COUNTRY_LIST} from './metadata/phone-numbers-by-country';
-import {CountryModel} from './phone-tokens';
+import {CountryModel, PhoneInputPrefixProvider} from './phone-tokens';
 
 const DEFAULT_COUNTRY_CODE_VALUE = {
     phoneNumberCode: '',
@@ -23,7 +23,7 @@ const DEFAULT_COUNTRY_CODE_VALUE = {
     encapsulation: ViewEncapsulation.None
 })
 
-export class PhoneNumberInternationalPrefixComponent implements OnChanges {
+export class PhoneNumberInternationalPrefixComponent implements OnChanges, PhoneInputPrefixProvider {
     @Input()
     searchPlaceholder: string = 'Search';
     @Input()

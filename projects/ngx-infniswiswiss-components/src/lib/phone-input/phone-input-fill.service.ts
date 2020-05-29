@@ -1,7 +1,7 @@
-import {isDefined} from '@angular/compiler/src/util';
 import {Injectable, ElementRef} from '@angular/core';
 import {CountryCode, formatIncompletePhoneNumber} from 'libphonenumber-js';
 import {convertToString} from '../util/convert-to-string';
+import {isInitialized} from '../util/is-initialized';
 
 @Injectable()
 export class PhoneInputFillService {
@@ -47,7 +47,7 @@ export class PhoneInputFillService {
 
     private predictCursorPositionInValue(elementRef: ElementRef, valueToSet: string, lastPressedKey: string) {
         let {selectionStart, selectionEnd} = this.getCursorPositionWithoutFormatting(elementRef);
-        if (!isDefined(selectionStart) || !isDefined(selectionEnd)) {
+        if (!isInitialized(selectionStart) || !isInitialized(selectionEnd)) {
             return {selectionStart, selectionEnd};
         }
         let i = 0;
@@ -81,7 +81,7 @@ export class PhoneInputFillService {
     private getCursorPositionWithoutFormatting(elementRef: ElementRef) {
         let {selectionStart, selectionEnd} = this.getInputSelection(elementRef);
         const currentInputValue = convertToString(elementRef.nativeElement.value);
-        if (isDefined(selectionStart) && isDefined(selectionEnd)) {
+        if (isInitialized(selectionStart) && isInitialized(selectionEnd)) {
             const initialSelectionStart = selectionStart;
             const initialSelectionEnd = selectionEnd;
             for (let i = 0; i < currentInputValue.length; i++) {
@@ -111,7 +111,7 @@ export class PhoneInputFillService {
                           selectionStart: number,
                           selectionEnd: number) {
         inputRef.nativeElement.value = valueToSet;
-        if (isDefined(selectionStart) && isDefined(selectionEnd)) {
+        if (isInitialized(selectionStart) && isInitialized(selectionEnd)) {
             selectionStart = Math.min(valueToSet.length, selectionStart);
             selectionEnd = Math.min(valueToSet.length, selectionEnd);
             inputRef.nativeElement.setSelectionRange(selectionStart, selectionEnd, 'forward');
