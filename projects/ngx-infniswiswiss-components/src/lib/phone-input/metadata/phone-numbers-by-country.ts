@@ -1,4 +1,3 @@
-import {CountryCode} from 'libphonenumber-js';
 import {CountryModel} from '../phone-tokens';
 
 export const DEFAULT_COUNTRY_LIST: CountryModel[] = [
@@ -6,7 +5,8 @@ export const DEFAULT_COUNTRY_LIST: CountryModel[] = [
     {name: 'Albania', code: 'AL', phoneNumberCode: '+355'}, {name: 'Algeria', code: 'DZ', phoneNumberCode: '+213'},
     {name: 'American Samoa', code: 'AS', phoneNumberCode: '+1 684'}, {name: 'Andorra', code: 'AD', phoneNumberCode: '+376'},
     {name: 'Angola', code: 'AO', phoneNumberCode: '+244'}, {name: 'Anguilla', code: 'AI', phoneNumberCode: '+1 264'},
-    {name: 'Antarctica', code: 'AQ' as CountryCode, phoneNumberCode: '+672'}, {name: 'Argentina', code: 'AR', phoneNumberCode: '+54'},
+    // {name: 'Antarctica', code: 'AQ' as CountryCode, phoneNumberCode: '+672'},
+    {name: 'Argentina', code: 'AR', phoneNumberCode: '+54'},
     {name: 'Armenia', code: 'AM', phoneNumberCode: '+374'}, {name: 'Aruba', code: 'AW', phoneNumberCode: '+297'},
     {name: 'Australia', code: 'AU', phoneNumberCode: '+61'}, {name: 'Austria', code: 'AT', phoneNumberCode: '+43'},
     {name: 'Azerbaijan', code: 'AZ', phoneNumberCode: '+994'}, {name: 'Bahamas', code: 'BS', phoneNumberCode: '+1'},
@@ -86,7 +86,7 @@ export const DEFAULT_COUNTRY_LIST: CountryModel[] = [
     {name: 'Panama', code: 'PA', phoneNumberCode: '+507'}, {name: 'Papua New Guinea', code: 'PG', phoneNumberCode: '+675'},
     {name: 'Paraguay', code: 'PY', phoneNumberCode: '+595'}, {name: 'Peru', code: 'PE', phoneNumberCode: '+51'},
     {name: 'Philippines', code: 'PH', phoneNumberCode: '+63'},
-    {name: 'Pitcairn Islands', code: 'PN' as CountryCode, phoneNumberCode: '+870'},
+    // {name: 'Pitcairn Islands', code: 'PN' as CountryCode, phoneNumberCode: '+870'},
     {name: 'Poland', code: 'PL', phoneNumberCode: '+48'}, {name: 'Portugal', code: 'PT', phoneNumberCode: '+351'},
     {name: 'Puerto Rico', code: 'PR', phoneNumberCode: '+1'}, {name: 'Qatar', code: 'QA', phoneNumberCode: '+974'},
     {name: 'Republic of the Congo', code: 'CG', phoneNumberCode: '+242'},

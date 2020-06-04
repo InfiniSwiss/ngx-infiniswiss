@@ -4,30 +4,22 @@ import {Platform} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
 import {
     Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
-    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject
+    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject, ChangeDetectorRef
 } from '@angular/core';
 import {NgControl, ControlValueAccessor, FormGroupDirective, NgForm} from '@angular/forms';
 import {ErrorStateMatcher, CanUpdateErrorStateCtor, mixinErrorState, CanUpdateErrorState} from '@angular/material/core';
 import {MatFormFieldControl} from '@angular/material/form-field';
 import {MAT_INPUT_VALUE_ACCESSOR} from '@angular/material/input';
 import {CountryCode} from 'libphonenumber-js';
-import {Subject, BehaviorSubject, Subscription} from 'rxjs';
-import {filter, debounceTime, takeUntil} from 'rxjs/operators';
+import {Subject, Subscription} from 'rxjs';
 import {convertToString} from '../util/convert-to-string';
 import {isChanged} from '../util/is-changed';
-import {isInitialized} from '../util/is-initialized';
 import {PhoneInputFillService} from './phone-input-fill.service';
-import {CountryModel, PhoneInputPrefixProvider} from './phone-tokens';
+import {CountryModel, PhoneInputPrefixProvider, PrefixProviderState} from './phone-tokens';
 
 interface PhoneInputModel {
     number: string;
     numberFormatted: string;
-}
-
-interface PhoneInternalValueChange {
-    number: string;
-    countryCode: CountryCode;
-    countriesList: CountryModel[];
 }
 
 let nextId = 0;
@@ -133,6 +125,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
 
     public set required(value: boolean) {
         this._required = coerceBooleanProperty(value);
+        this.stateChanges.next();
     }
 
     private _readonly = false;
@@ -159,21 +152,11 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      */
     @Input()
     public countryCode: CountryCode;
+    private _countryCode: CountryCode;
 
     @Input()
     public prefixProvider: PhoneInputPrefixProvider;
-    /**
-     * Implemented as part phone number handling.
-     */
-    // @Input()
-    // public internationalPrefixEnabled: boolean;
 
-    // /**
-    //  * Implemented as part phone number handling.
-    //  */
-    // @Input()
-    // public internationalPrefixCountries: CountryModel[] = DEFAULT_COUNTRY_LIST;
-    //
     /**
      * Implemented as part phone number handling.
      */
@@ -204,7 +187,6 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     /**
      * Implemented as part of MatFormFieldControl. and PhoneHandling
      */
-    private setInternalDataAndUpdateInput$: BehaviorSubject<PhoneInternalValueChange> = new BehaviorSubject<PhoneInternalValueChange>(null);
     public internalValue: PhoneInputModel = {number: '', numberFormatted: ''};
 
     /**
@@ -224,6 +206,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         public  ngZone: NgZone,
         public  _autofillMonitor: AutofillMonitor,
         public  fm: FocusMonitor,
+        private cdRef: ChangeDetectorRef,
         public hostElementRef: ElementRef<HTMLElement>,
         public phoneInputFillService: PhoneInputFillService) {
         super(_defaultErrorStateMatcher, _parentForm, _parentFormGroup, ngControl);
@@ -242,28 +225,9 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         });
 
         this._isServer = !this._platform.isBrowser;
-
-        this.setInternalDataAndUpdateInput$.pipe(
-            filter(v => v && isInitialized(v.countryCode)),
-            debounceTime(0),
-            takeUntil(this.onDestroy)
-        ).subscribe(data => {
-            this.countryCode = data.countryCode;
-            if (this.prefixProvider && this.prefixProvider.countryCode !== this.countryCode) {
-                this.prefixProvider.countryCode = this.countryCode;
-                this.prefixProvider.updateSelectedCountryCode();
-            }
-            if (this.prefixProvider && isInitialized(data.countryCode) && isInitialized(this.prefixProvider.countriesList)) {
-                const country = data.countriesList.find(c => c.code === data.countryCode);
-                this.internationalPrefix = convertToString(country?.phoneNumberCode);
-                data.number = convertToString(data.number);
-                data.number = data.number.substring(this.internationalPrefix.length, data.number.length);
-            }
-            this.internalValue = this.phoneInputFillService.formatPhoneNumber(data.number, data.countryCode, this.internationalPrefix);
-            if (this._elementRef) {
-                this.propagateValueToInput(this.internalValue.numberFormatted);
-            }
-        });
+        // this.notifyStateChanges.pipe(debounceTime(0), takeUntil(this.onDestroy)).subscribe(() => {
+        //     this.stateChanges.next();
+        // });
     }
 
     ngDoCheck(): void {
@@ -281,22 +245,22 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
-        if (isChanged(changes.countryCode)) {
-            this.updateInternalValueWithoutTriggeringChanges({
-                countryCode: this.countryCode
-            });
+        if (isChanged(changes.countryCode) && !this.prefixProvider) {
+            this.internationalPrefix = '';
+            this._countryCode = this.countryCode;
+            this.internalValue = this.phoneInputFillService.formatPhoneNumber(this.internalValue.number, this._countryCode, this.internationalPrefix);
+            this.propagateValueToInput(this.internalValue.numberFormatted);
         }
         if (isChanged(changes.prefixProvider) && this.prefixProvider) {
-            this.updateInternalValueWithoutTriggeringChanges({
-                countriesList: this.prefixProvider.countriesList
-            });
             this.prefixProviderSubscription?.unsubscribe();
-            this.prefixProviderSubscription = this.prefixProvider.countryCodeChange
-                .subscribe($ev => {
-                    this.handleCountryCodeChange($ev);
-                });
+            this.prefixProviderSubscription = this.prefixProvider.prefixProviderState.subscribe(newPrefixState => {
+                this.handlePrefixProviderCountryCodeChange(newPrefixState);
+            });
         }
-        this.stateChanges.next();
+
+        if (isChanged(changes.placeholder) || isChanged(changes.readonly)) {
+            this.stateChanges.next();
+        }
     }
 
     private _dirtyCheckNativeValue() {
@@ -308,7 +272,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
 
     ngAfterViewInit(): void {
         // Notify input initialized
-        this.updateInternalValueWithoutTriggeringChanges({});
+        this.propagateValueToInput(this.internalValue.numberFormatted);
         // On some versions of iOS the caret gets stuck in the wrong place when holding down the delete
         // key. In order to get around this we need to "jiggle" the caret loose. Since this bug only
         // exists on iOS, we only bother to install the listener on iOS.
@@ -362,17 +326,10 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      * Implemented as part of ControlValueAccessor.
      */
     writeValue(obj: string): void {
-        this.updateInternalValueWithoutTriggeringChanges({
-            number: obj
-        });
-    }
-
-    private updateInternalValueWithoutTriggeringChanges(data: Partial<PhoneInternalValueChange>) {
-        const current: PhoneInternalValueChange = this.setInternalDataAndUpdateInput$.getValue() ?? {} as PhoneInternalValueChange;
-        this.setInternalDataAndUpdateInput$.next({
-            ...current,
-            ...data
-        });
+        this.internalValue = obj
+            ? this.phoneInputFillService.formatPhoneNumber(obj, this._countryCode, this.internationalPrefix)
+            : {numberFormatted: '', number: ''};
+        this.stateChanges.next();
     }
 
     /**
@@ -398,8 +355,9 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         // Reset from here to ensure that the element doesn't become stuck.
         if (this.focused) {
             this.focused = false;
-            this.stateChanges.next();
         }
+        this.cdRef.markForCheck();
+        this.stateChanges.next();
     }
 
     /**
@@ -409,7 +367,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         // Do not re-focus the input element if the element is already focused. Otherwise it can happen
         // that someone clicks on a time input and the cursor resets to the "hours" field while the
         // "minutes" field was actually clicked. See: https://github.com/angular/components/issues/12849
-        if (!this.focused && this._elementRef) {
+        if (!this.focused && !this.disabled && !this.readonly && this._elementRef) {
             this.focused = true;
             this._elementRef?.nativeElement?.focus();
         }
@@ -423,6 +381,9 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     }
 
     handleFocusChanged(isFocused: boolean) {
+        if (this.disabled || this.readonly) {
+            return;
+        }
         // On focus out try to format one more time
         if (!isFocused) {
             this.updateValueAndFormatInput();
@@ -430,22 +391,23 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         if (isFocused !== this.focused && (!this.readonly || !isFocused)) {
             this.onTouched();
             this.focused = isFocused;
-            this.stateChanges.next();
         }
+        this.stateChanges.next();
     }
 
     updateValueAndFormatInput() {
         if (this._elementRef) {
-            const inputValue = this.phoneInputFillService.setFormattingAndUpdateInput(this._elementRef, this.countryCode, this.internationalPrefix, this.lastPressedKey);
+            const inputValue = this.phoneInputFillService.setFormattingAndUpdateInput(this._elementRef, this._countryCode, this.internationalPrefix, this.lastPressedKey);
             this.internalValue.number = inputValue.number;
             this.internalValue.numberFormatted = inputValue.numberFormatted;
         }
         this.onTouched();
         this.onChangeFn(this.internalValue.number);
+        this.stateChanges.next();
     }
 
-    handleCountryCodeChange($event: CountryCode) {
-        const selectedCountry = this.prefixProvider.countriesList.find(c => c.code === $event);
+    handlePrefixProviderCountryCodeChange(newPrefixState: PrefixProviderState) {
+        const selectedCountry = newPrefixState.selected;
         let phoneNumberValue = this.internalValue.number;
         // Remove old prefix if it was set
         if (this.internationalPrefix && this.internalValue.number.startsWith(this.internationalPrefix)) {
@@ -455,16 +417,18 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         const isPhoneAlreadyStartingWithPrefix = phoneNumberValue.startsWith(this.internationalPrefix);
         if (!isPhoneAlreadyStartingWithPrefix && phoneNumberValue.startsWith('+')) {
             // Remove leading + cause it's part of the prefix
-            phoneNumberValue = this.internationalPrefix + phoneNumberValue.substring(1, phoneNumberValue.length);
-        } else if (!isPhoneAlreadyStartingWithPrefix && phoneNumberValue.length) {
-            phoneNumberValue = this.internationalPrefix + phoneNumberValue;
+            phoneNumberValue = phoneNumberValue.substring(1, phoneNumberValue.length);
+        } else if (isPhoneAlreadyStartingWithPrefix) {
+            phoneNumberValue = phoneNumberValue.substring(this.internationalPrefix.length, phoneNumberValue.length);
         }
-        this.updateInternalValueWithoutTriggeringChanges({
-            number: phoneNumberValue,
-            countryCode: $event
-        });
-        this.onTouched();
-        this.onChangeFn(phoneNumberValue);
+        this._countryCode = newPrefixState.selectedCode;
+        this.internalValue = this.phoneInputFillService.formatPhoneNumber(phoneNumberValue, this._countryCode, this.internationalPrefix);
+        this.propagateValueToInput(this.internalValue.numberFormatted);
+        if (newPrefixState.isUserChange) {
+            this.onTouched();
+            this.onChangeFn(this.internalValue.number);
+        }
+        this.stateChanges.next();
     }
 
     updateLastKeyDown($event: KeyboardEvent) {

@@ -5,9 +5,17 @@ import {isInitialized} from '../util/is-initialized';
 
 @Injectable()
 export class PhoneInputFillService {
+    public formatStringAsPhone(pureNumber: string, countryCode: CountryCode) {
+        return formatIncompletePhoneNumber(pureNumber, countryCode);
+    }
+
     public formatPhoneNumber(originalValue: string,
                              countryCode: CountryCode,
                              ignoredPrefix: string) {
+        if (!countryCode) {
+            return {number: originalValue ?? '', numberFormatted: originalValue ?? ''};
+        }
+
         ignoredPrefix = convertToString(ignoredPrefix);
         const pureNumber = ignoredPrefix + this.clearInvalidCharacters(originalValue);
         const hasAllowedCharactersButInvalidForFormatting = /\#|\*/.test(originalValue);
@@ -15,7 +23,7 @@ export class PhoneInputFillService {
         try {
             numberFormatted = hasAllowedCharactersButInvalidForFormatting
                 ? pureNumber
-                : formatIncompletePhoneNumber(pureNumber, countryCode);
+                : this.formatStringAsPhone(pureNumber, countryCode);
             numberFormatted = numberFormatted.substring(ignoredPrefix.length, numberFormatted.length).trim();
         } catch (e) {
             numberFormatted = pureNumber;

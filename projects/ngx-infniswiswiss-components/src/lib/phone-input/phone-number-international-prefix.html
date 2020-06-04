@@ -1,26 +1,26 @@
-<mat-menu #countriesLise (close)="searchControl.patchValue('')" [class]="'phone-number-format'">
-    <div class="search-container" (click)="$event?.stopPropagation()" >
-        <mat-form-field>
-            <mat-placeholder>{{searchPlaceholder}}</mat-placeholder>
-            <input [formControl]="searchControl" matInput>
-        </mat-form-field>
-    </div>
-    <div (click)="handleSelectCountry(c)" *ngFor="let c of visibleCountries$ | async" [id]="c.code"
-         class="ngx-phone-country"
-         mat-menu-item>
-        <div class="ngx-phone-country">
-            <div [ngClass]="c.flagClass" class="iti__flag"></div>
+<ng-container *ngIf="prefixProviderState | async as cmpState">
+    <mat-menu #countriesLise (close)="searchControl.patchValue('')" [class]="'phone-number-format'">
+        <div (click)="$event?.stopPropagation()" class="search-container">
+            <mat-form-field>
+                <mat-placeholder>{{searchPlaceholder}}</mat-placeholder>
+                <input [formControl]="searchControl" matInput>
+            </mat-form-field>
         </div>
-        <div class="country-name">{{c.name}}</div>
-    </div>
-</mat-menu>
-<ng-container *ngIf="countryValue | async as cv">
+        <div (click)="handleSelectCountry(c)" *ngFor="let c of visibleCountries$ | async" [id]="c.code"
+             class="ngx-phone-country"
+             mat-menu-item>
+            <div class="ngx-phone-country">
+                <div [ngClass]="c.flagClass" class="iti__flag"></div>
+            </div>
+            <div class="country-name">{{c.name}}</div>
+        </div>
+    </mat-menu>
     <div class="ngx-phone-country-trigger">
         <ng-template #contentRef>
-            <div class="ngx-phone-country-flag-container" [class.empty]="!cv.flagClass">
-                <div [ngClass]="cv.flagClass" class="iti__flag"></div>
+            <div [class.empty]="!cmpState.selected?.flagClass" class="ngx-phone-country-flag-container">
+                <div [ngClass]="cmpState.selected?.flagClass" class="iti__flag"></div>
             </div>
-            <div class="ngx-phone-country-text">{{cv.phoneNumberCode}}</div>
+            <div class="ngx-phone-country-text">{{cmpState.selected?.phoneNumberCode}}</div>
         </ng-template>
 
         <ng-container *ngIf="disabled; else defaultValue">
@@ -30,10 +30,12 @@
         </ng-container>
         <ng-template #defaultValue>
             <div [matMenuTriggerFor]="countriesLise"
+                 (click)="$event?.stopPropagation()"
                  class="ngx-phone-country-trigger-btn"
                  matRipple>
                 <ng-container *ngTemplateOutlet="contentRef"></ng-container>
             </div>
         </ng-template>
     </div>
+
 </ng-container>

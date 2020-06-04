@@ -19,9 +19,25 @@
     <div class="toggle-country-code-example">
         <div class="toggle-country-code-row">
             <mat-form-field>
+                <mat-placeholder>Select code</mat-placeholder>
+                <mat-select (valueChange)="countryCodeControl.patchValue($event)"
+                            [value]="countryCodeControl.value">
+                    <mat-option *ngFor="let o of countryCodesList" [value]="o">
+                        {{o}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="toggle-country-code-row">
+            <mat-slide-toggle (change)="toggleDisabled()"></mat-slide-toggle>
+        </div>
+        <div class="toggle-country-code-row">
+            <mat-form-field>
                 <ngx-phone-number-international-prefix #ref="ngxPhoneNumberInternationalPrefix"
+                                                       [formControl]="countryCodeControl"
                                                        matPrefix></ngx-phone-number-international-prefix>
-                <ngx-phone-input [countryCode]="countryCodeSecond" [prefixProvider]="ref" [value]="'+40774234567'"
+                <ngx-phone-input [formControl]="phoneInputControl"
+                                 [prefixProvider]="ref"
                                  placeholder="Phone number"></ngx-phone-input>
             </mat-form-field>
         </div>
