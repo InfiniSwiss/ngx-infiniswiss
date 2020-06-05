@@ -4,7 +4,7 @@ import {Platform} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
 import {
     Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
-    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject, ChangeDetectorRef, Output, EventEmitter
+    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject, ChangeDetectorRef
 } from '@angular/core';
 import {NgControl, ControlValueAccessor, FormGroupDirective, NgForm} from '@angular/forms';
 import {ErrorStateMatcher, CanUpdateErrorStateCtor, mixinErrorState, CanUpdateErrorState} from '@angular/material/core';
@@ -15,7 +15,7 @@ import {Subject, Subscription} from 'rxjs';
 import {convertToString} from '../util/convert-to-string';
 import {isChanged} from '../util/is-changed';
 import {PhoneInputFillService} from './phone-input-fill.service';
-import {CountryModel, PhoneInputPrefixProvider, PrefixProviderState} from './phone-tokens';
+import {PhoneInputPrefixProvider, PrefixProviderState} from './phone-tokens';
 
 interface PhoneInputModel {
     number: string;
@@ -399,7 +399,6 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
             this.internalValue.number = inputValue.number;
             this.internalValue.numberFormatted = inputValue.numberFormatted;
         }
-        this.onTouched();
         this.onChangeFn(this.internalValue.number);
         this.stateChanges.next();
     }
@@ -407,6 +406,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
     handlePrefixProviderCountryCodeChange(newPrefixState: PrefixProviderState) {
         const selectedCountry = newPrefixState.selected;
         let phoneNumberValue = this.internalValue.number;
+        const oldPhoneValue = this.internalValue.number;
         // Remove old prefix if it was set
         if (this.internationalPrefix && this.internalValue.number.startsWith(this.internationalPrefix)) {
             phoneNumberValue = phoneNumberValue.substring(this.internationalPrefix.length, phoneNumberValue.length);
@@ -424,6 +424,8 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         this.propagateValueToInput(this.internalValue.numberFormatted);
         if (newPrefixState.isUserChange) {
             this.onTouched();
+        }
+        if (oldPhoneValue !== this.internalValue.number) {
             this.onChangeFn(this.internalValue.number);
         }
         this.stateChanges.next();
