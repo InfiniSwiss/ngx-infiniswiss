@@ -44,7 +44,7 @@
                  (menuClosed)="handleMenuClosed()"
                  (menuOpened)="handleMenuOpened()"
                  [matMenuTriggerFor]="countriesMatMenu">
-                <button #menuTriggerElement class="ngx-phone-country-trigger-btn" mat-button>
+                <button type="button" #menuTriggerElement class="ngx-phone-country-trigger-btn" mat-button>
                     <ng-container *ngTemplateOutlet="contentRef"></ng-container>
                 </button>
             </div>

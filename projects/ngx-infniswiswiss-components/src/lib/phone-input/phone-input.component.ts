@@ -4,7 +4,7 @@ import {Platform} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
 import {
     Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
-    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject, ChangeDetectorRef
+    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject, ChangeDetectorRef, Output, EventEmitter
 } from '@angular/core';
 import {NgControl, ControlValueAccessor, FormGroupDirective, NgForm} from '@angular/forms';
 import {ErrorStateMatcher, CanUpdateErrorStateCtor, mixinErrorState, CanUpdateErrorState} from '@angular/material/core';
@@ -152,6 +152,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
      */
     @Input()
     public countryCode: CountryCode;
+
     private _countryCode: CountryCode;
 
     @Input()
