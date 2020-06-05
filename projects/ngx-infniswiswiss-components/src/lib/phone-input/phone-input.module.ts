@@ -1,6 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {NgModule, ModuleWithProviders} from '@angular/core';
 import {ReactiveFormsModule} from '@angular/forms';
+import {MatButton, MatButtonModule} from '@angular/material/button';
 import {MatRippleModule} from '@angular/material/core';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -13,7 +14,7 @@ import {PhoneNumberInternationalPrefixComponent} from './phone-number-internatio
 import {NGX_PHONE_COUNTRY_CODES} from './phone-tokens';
 
 @NgModule({
-    imports: [CommonModule, MatFormFieldModule, MatMenuModule, MatRippleModule, MatInputModule, ReactiveFormsModule],
+    imports: [CommonModule, MatFormFieldModule, MatButtonModule, MatMenuModule, MatInputModule, ReactiveFormsModule],
     exports: [PhoneInputComponent, PhoneNumberInternationalPrefixComponent],
     declarations: [PhoneInputComponent, PhoneNumberInternationalPrefixComponent],
     providers: [

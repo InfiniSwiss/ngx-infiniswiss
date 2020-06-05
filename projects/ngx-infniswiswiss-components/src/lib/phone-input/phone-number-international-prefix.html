@@ -1,26 +1,37 @@
 <ng-container *ngIf="prefixProviderState | async as cmpState">
-    <mat-menu #countriesLise (close)="searchControl.patchValue('')" [class]="'phone-number-format'">
-        <div (click)="$event?.stopPropagation()" class="search-container">
-            <mat-form-field>
-                <mat-placeholder>{{searchPlaceholder}}</mat-placeholder>
-                <input [formControl]="searchControl" matInput>
-            </mat-form-field>
-        </div>
-        <div (click)="handleSelectCountry(c)" *ngFor="let c of visibleCountries$ | async" [id]="c.code"
-             class="ngx-phone-country"
-             mat-menu-item>
-            <div class="ngx-phone-country">
-                <div [ngClass]="c.flagClass" class="iti__flag"></div>
+    <mat-menu #countriesMatMenu (close)="searchControl.patchValue('')"
+              [class]="'phone-number-format'">
+        <ng-container *ngIf="visibleCountries$ | async as data">
+            <div (blur)="searchInput?.nativeElement?.blur()"
+                 (click)="$event?.stopPropagation()"
+                 (focus)="searchInput?.nativeElement?.focus()"
+                 class="search-container"
+                 mat-menu-item>
+                <mat-form-field>
+                    <mat-placeholder>{{searchPlaceholder}}</mat-placeholder>
+                    <input #searchRef [formControl]="searchControl" matInput>
+                </mat-form-field>
             </div>
-            <div class="country-name">{{c.name}}</div>
-        </div>
+            <div (click)="handleSelectCountry(c)"
+                 (keyup.enter)="handleSelectCountry(c)"
+                 (keyup.space)="handleSelectCountry(c)"
+                 *ngFor="let c of data.countries"
+                 [id]="c.code"
+                 class="ngx-phone-country"
+                 mat-menu-item>
+                <div class="ngx-phone-country">
+                    <div [ngClass]="c.flagClass" class="iti__flag"></div>
+                </div>
+                <div class="country-name">{{c.name}}</div>
+            </div>
+        </ng-container>
     </mat-menu>
     <div class="ngx-phone-country-trigger">
         <ng-template #contentRef>
             <div [class.empty]="!cmpState.selected?.flagClass" class="ngx-phone-country-flag-container">
                 <div [ngClass]="cmpState.selected?.flagClass" class="iti__flag"></div>
             </div>
-            <div class="ngx-phone-country-text">{{cmpState.selected?.phoneNumberCode}}</div>
+            <div [class.disabled]="disabled" class="ngx-phone-country-text">{{cmpState.selected?.phoneNumberCode}}</div>
         </ng-template>
 
         <ng-container *ngIf="disabled; else defaultValue">
@@ -29,11 +40,13 @@
             </div>
         </ng-container>
         <ng-template #defaultValue>
-            <div [matMenuTriggerFor]="countriesLise"
-                 (click)="$event?.stopPropagation()"
-                 class="ngx-phone-country-trigger-btn"
-                 matRipple>
-                <ng-container *ngTemplateOutlet="contentRef"></ng-container>
+            <div (click)="$event?.stopPropagation()"
+                 (menuClosed)="handleMenuClosed()"
+                 (menuOpened)="handleMenuOpened()"
+                 [matMenuTriggerFor]="countriesMatMenu">
+                <button #menuTriggerElement class="ngx-phone-country-trigger-btn" mat-button>
+                    <ng-container *ngTemplateOutlet="contentRef"></ng-container>
+                </button>
             </div>
         </ng-template>
     </div>

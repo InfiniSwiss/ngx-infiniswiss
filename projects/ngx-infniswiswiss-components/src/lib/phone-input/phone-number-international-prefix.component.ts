@@ -1,7 +1,9 @@
 import {
-    Component, ChangeDetectionStrategy, ViewEncapsulation, Input, OnChanges, SimpleChanges, forwardRef, Output, EventEmitter
+    Component, ChangeDetectionStrategy, ViewEncapsulation, Input, OnChanges, SimpleChanges, forwardRef, Output, EventEmitter,
+    ChangeDetectorRef, ViewChild, ElementRef, NgZone
 } from '@angular/core';
 import {FormControl, ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {MatMenuTrigger} from '@angular/material/menu';
 import {CountryCode} from 'libphonenumber-js';
 import {BehaviorSubject, Observable, combineLatest} from 'rxjs';
 import {startWith, map, distinctUntilChanged} from 'rxjs/operators';
@@ -44,15 +46,19 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges, Phone
     public disabled: boolean;
     @Output()
     countryCodeChange: EventEmitter<CountryCode> = new EventEmitter<CountryCode>();
+    @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
+    @ViewChild('searchRef', {read: ElementRef}) searchInput: ElementRef;
+    @ViewChild('menuTriggerElement', {read: ElementRef}) menuTriggerElement: ElementRef;
     public searchControl = new FormControl('');
-    public readonly visibleCountries$: Observable<CountryModel[]>;
+    public readonly visibleCountries$: Observable<{ countries: CountryModel[] }>;
     private readonly _prefixProviderState: BehaviorSubject<PrefixProviderState>;
+    public isMenuOpened: boolean;
 
     public get prefixProviderState() {
         return this._prefixProviderState.asObservable();
     }
 
-    constructor() {
+    constructor(private cdRef: ChangeDetectorRef, private ngZone: NgZone) {
         this._prefixProviderState = new BehaviorSubject<PrefixProviderState>({
             selectedCode: null,
             countries: this.mapCountriesList(),
@@ -66,12 +72,13 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges, Phone
         ]).pipe(
             map(([searchQuery, countries]) => {
                 if (!searchQuery) {
-                    return countries;
+                    return {countries};
                 }
                 searchQuery = convertToString(searchQuery).toLocaleLowerCase();
-                return countries.filter(c => {
+                const filtered = countries.filter(c => {
                     return c.name.toLocaleLowerCase().includes(searchQuery);
                 });
+                return {countries: filtered};
             })
         );
     }
@@ -103,6 +110,7 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges, Phone
 
     setDisabledState?(isDisabled: boolean): void {
         this.disabled = isDisabled;
+        this.cdRef.markForCheck();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -146,6 +154,25 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges, Phone
         this.onChangeFn(c.code);
         this.onTouched();
         this.countryCodeChange.emit(c.code);
+
+        if (this.trigger) {
+            this.trigger.closeMenu();
+        }
+    }
+
+    public handleMenuOpened() {
+        this.isMenuOpened = true;
+    }
+
+    public handleMenuClosed() {
+        this.isMenuOpened = false;
+        this.ngZone.runOutsideAngular(() => {
+            setTimeout(() => {
+                if (!this.disabled && !this.isMenuOpened && this.menuTriggerElement) {
+                    this.menuTriggerElement.nativeElement.focus();
+                }
+            });
+        });
     }
 
 

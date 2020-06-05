@@ -225,9 +225,6 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         });
 
         this._isServer = !this._platform.isBrowser;
-        // this.notifyStateChanges.pipe(debounceTime(0), takeUntil(this.onDestroy)).subscribe(() => {
-        //     this.stateChanges.next();
-        // });
     }
 
     ngDoCheck(): void {
