@@ -5,6 +5,10 @@ ngx-phone-number-international-prefix {
     .ngx-phone-country-text {
         line-height: inherit;
         font-weight: 400;
+
+        &.disabled {
+            color: rgba(0, 0, 0, .38);
+        }
     }
 
     .ngx-phone-country-trigger-btn {

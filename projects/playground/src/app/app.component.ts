@@ -24,8 +24,10 @@ export class AppComponent {
     toggleDisabled() {
         if (this.phoneInputControl.disabled) {
             this.phoneInputControl.enable();
+            this.countryCodeControl.enable();
         } else {
             this.phoneInputControl.disable();
+            this.countryCodeControl.disable();
         }
     }
 }
