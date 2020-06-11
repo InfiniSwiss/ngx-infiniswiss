@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --project=playground --port=5001",
+    "start": "ng serve --project=playground --port=5001 --host=0.0.0.0",
     "build:cmp:lib": "ng build --project=ngx-infniswiswiss-components --prod",
     "build": "ng build",
     "test": "ng test",

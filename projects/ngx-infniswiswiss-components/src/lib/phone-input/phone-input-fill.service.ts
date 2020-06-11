@@ -1,10 +1,22 @@
-import {Injectable, ElementRef} from '@angular/core';
+import {Platform} from '@angular/cdk/platform';
+import {Injectable, ElementRef, NgZone, Optional} from '@angular/core';
 import {CountryCode, formatIncompletePhoneNumber} from 'libphonenumber-js';
 import {convertToString} from '../util/convert-to-string';
 import {isInitialized} from '../util/is-initialized';
 
 @Injectable()
 export class PhoneInputFillService {
+    constructor(@Optional() private readonly ngZone: NgZone,
+                private readonly platform: Platform) {
+    }
+
+    private runOutsideOfAngular(fn: () => void) {
+        if (this.ngZone) {
+            this.ngZone.runOutsideAngular(fn);
+        }
+        fn();
+    }
+
     public formatStringAsPhone(pureNumber: string, countryCode: CountryCode) {
         return formatIncompletePhoneNumber(pureNumber, countryCode);
     }
@@ -55,6 +67,7 @@ export class PhoneInputFillService {
 
     private predictCursorPositionInValue(elementRef: ElementRef, valueToSet: string, lastPressedKey: string) {
         let {selectionStart, selectionEnd} = this.getCursorPositionWithoutFormatting(elementRef);
+        console.log(`INITIAL WORD: ${elementRef.nativeElement.value}: Cursor: ${selectionStart}, ${selectionEnd}`);
         if (!isInitialized(selectionStart) || !isInitialized(selectionEnd)) {
             return {selectionStart, selectionEnd};
         }
@@ -69,9 +82,9 @@ export class PhoneInputFillService {
             }
             i++;
         }
-
+        console.log(`INITIAL COMPUTED POSITION: ${valueToSet}: Cursor: ${selectionStart}, ${selectionEnd}`);
         const isSelectionStartAsSelectionEnd = selectionStart === selectionEnd;
-        const moveDirection = lastPressedKey === 'Backspace'
+        const moveDirection = lastPressedKey === 'Backspace' || lastPressedKey === ''
             ? -1
             : 1;
         let valueIndex = Math.max(selectionEnd - 1, 0);
@@ -83,6 +96,7 @@ export class PhoneInputFillService {
             valueIndex += moveDirection;
         }
 
+        console.log(`FINAL COMPUTED POSITION: ${valueToSet}: Cursor: ${selectionStart}, ${selectionEnd}`);
         return {selectionStart, selectionEnd};
     }
 
@@ -119,11 +133,25 @@ export class PhoneInputFillService {
                           selectionStart: number,
                           selectionEnd: number) {
         inputRef.nativeElement.value = valueToSet;
-        if (isInitialized(selectionStart) && isInitialized(selectionEnd)) {
-            selectionStart = Math.min(valueToSet.length, selectionStart);
-            selectionEnd = Math.min(valueToSet.length, selectionEnd);
-            inputRef.nativeElement.setSelectionRange(selectionStart, selectionEnd, 'forward');
+        if (!isInitialized(selectionStart) || !isInitialized(selectionEnd)) {
+            return;
         }
+
+        selectionStart = Math.min(valueToSet.length, selectionStart);
+        selectionEnd = Math.min(valueToSet.length, selectionEnd);
+        if (!this.platform.ANDROID) {
+            inputRef.nativeElement.setSelectionRange(selectionStart, selectionEnd, 'forward');
+            return;
+        }
+
+        // For some reason on Android the cursor moves weird
+        this.runOutsideOfAngular(() => {
+            setTimeout(() => {
+                if (valueToSet === inputRef.nativeElement.value) {
+                    inputRef.nativeElement.setSelectionRange(selectionStart, selectionEnd, 'forward');
+                }
+            });
+        });
     }
 
     private isFormattingCharacter(char: string) {

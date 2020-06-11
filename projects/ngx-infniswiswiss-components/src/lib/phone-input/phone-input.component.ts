@@ -433,6 +433,9 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
 
     updateLastKeyDown($event: KeyboardEvent) {
         this.lastPressedKey = $event.key;
+        if ($event.key === 'Unidentified' && $event.keyCode === 229 && this._platform.ANDROID) {
+            this.lastPressedKey = 'Backspace';
+        }
     }
 
     private propagateValueToInput(value) {
