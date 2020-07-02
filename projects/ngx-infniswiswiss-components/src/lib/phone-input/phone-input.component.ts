@@ -3,11 +3,11 @@ import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {Platform} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
 import {
-    Component, ChangeDetectionStrategy, ViewEncapsulation, OnDestroy, HostBinding, Input, Optional, Self, ElementRef, AfterViewInit,
-    ViewChild, NgZone, OnChanges, SimpleChanges, DoCheck, Inject, ChangeDetectorRef
+  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, ElementRef, HostBinding, Inject, Input, NgZone, OnChanges, OnDestroy, Optional, Self, SimpleChanges, ViewChild,
+  ViewEncapsulation
 } from '@angular/core';
-import {NgControl, ControlValueAccessor, FormGroupDirective, NgForm} from '@angular/forms';
-import {ErrorStateMatcher, CanUpdateErrorStateCtor, mixinErrorState, CanUpdateErrorState} from '@angular/material/core';
+import {ControlValueAccessor, FormGroupDirective, NgControl, NgForm} from '@angular/forms';
+import {CanUpdateErrorState, CanUpdateErrorStateCtor, ErrorStateMatcher, mixinErrorState} from '@angular/material/core';
 import {MatFormFieldControl} from '@angular/material/form-field';
 import {MAT_INPUT_VALUE_ACCESSOR} from '@angular/material/input';
 import {CountryCode} from 'libphonenumber-js';
@@ -384,7 +384,7 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
         // On focus out try to format one more time
         if (!isFocused) {
-            this.updateValueAndFormatInput();
+          this.updateValueOnBlur();
         }
         if (isFocused !== this.focused && (!this.readonly || !isFocused)) {
             this.onTouched();
@@ -444,5 +444,13 @@ export class PhoneInputComponent extends _MatInputMixinBase implements OnDestroy
         }
 
         this._elementRef.nativeElement.value = value;
+    }
+
+    private updateValueOnBlur() {
+        const originalValue = convertToString(this._elementRef.nativeElement.value);
+        this.internalValue = this.phoneInputFillService.formatPhoneNumber(originalValue, this._countryCode, this.internationalPrefix);
+        this.propagateValueToInput(this.internalValue.numberFormatted);
+        this.onChangeFn(this.internalValue.number);
+        this.stateChanges.next();
     }
 }
