@@ -12,9 +12,10 @@ import {PhoneInputFillService} from './phone-input-fill.service';
 import {PhoneInputComponent} from './phone-input.component';
 import {PhoneNumberInternationalPrefixComponent} from './phone-number-international-prefix.component';
 import {NGX_PHONE_COUNTRY_CODES} from './phone-tokens';
+import {MatIconModule} from '@angular/material/icon';
 
 @NgModule({
-    imports: [CommonModule, MatFormFieldModule, MatButtonModule, MatMenuModule, MatInputModule, ReactiveFormsModule],
+    imports: [CommonModule, MatFormFieldModule, MatButtonModule, MatMenuModule, MatInputModule, ReactiveFormsModule, MatIconModule],
     exports: [PhoneInputComponent, PhoneNumberInternationalPrefixComponent],
     declarations: [PhoneInputComponent, PhoneNumberInternationalPrefixComponent],
     providers: [
