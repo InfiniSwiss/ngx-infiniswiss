@@ -50,6 +50,24 @@ ngx-phone-number-international-prefix {
             right: 0;
         }
     }
+
+    .ngx-phone-country-arrow {
+      &.mat-color-default {
+        color: rgba(0,0,0,0.54);
+      }
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid;
+      margin: 0 4px;
+
+    }
+
+    .ngx-phone-country-arrow-container {
+      line-height: inherit;
+      transform: translateY(-5px);
+    }
 }
 
 .mat-menu-panel.phone-number-format {

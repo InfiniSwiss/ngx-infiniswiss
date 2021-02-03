@@ -1,0 +1,22 @@
+@import '~@angular/material/theming';
+
+@mixin phone-input-theme($theme) {
+  $primary: map-get($theme, primary);
+  $warn: map-get($theme, warn);
+  $accent: map-get($theme, accent);
+  ngx-phone-number-international-prefix {
+    .ngx-phone-country-arrow {
+      &.mat-color {
+        &-primary {
+          color: mat-color($primary);
+        }
+        &-warn {
+          color: mat-color($warn);
+        }
+        &-accent {
+          color: mat-color($accent);
+        }
+      }
+    }
+  }
+}

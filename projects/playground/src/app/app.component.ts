@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {FormControl} from '@angular/forms';
+import {FormControl, Validators} from '@angular/forms';
 
 @Component({
     selector: 'app-root',
@@ -8,15 +8,15 @@ import {FormControl} from '@angular/forms';
 })
 export class AppComponent {
     title = 'playground';
-    countryCode = 'US';
+    countryCode = 'RO';
     countryCodesList = [
         'RO',
         'GB',
         'US',
         'RU'
     ];
-    countryCodeControl = new FormControl('');
-    phoneInputControl = new FormControl('+40774234567');
+    countryCodeControl = new FormControl('', [Validators.required]);
+    phoneInputControl = new FormControl('+40774234567', [Validators.required]);
 
     constructor() {
     }

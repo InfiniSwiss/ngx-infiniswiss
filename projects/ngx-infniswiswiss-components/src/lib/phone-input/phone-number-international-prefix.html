@@ -37,8 +37,13 @@
         <ng-container *ngIf="disabled; else defaultValue">
             <div class="ngx-phone-country-trigger-btn disabled">
                 <ng-container *ngTemplateOutlet="contentRef"></ng-container>
+              <div class="ngx-phone-country-arrow-container">
+                <div class="ngx-phone-country-arrow mat-color-{{isMenuOpened ? color : 'default'}}"></div>
+              </div>
             </div>
+
         </ng-container>
+
         <ng-template #defaultValue>
             <div (click)="$event?.stopPropagation()"
                  (menuClosed)="handleMenuClosed()"
@@ -46,6 +51,9 @@
                  [matMenuTriggerFor]="countriesMatMenu">
                 <button type="button" #menuTriggerElement class="ngx-phone-country-trigger-btn" mat-button>
                     <ng-container *ngTemplateOutlet="contentRef"></ng-container>
+                  <div class="ngx-phone-country-arrow-container">
+                    <div class="ngx-phone-country-arrow mat-color-{{isMenuOpened ? color : 'default'}}"></div>
+                  </div>
                 </button>
             </div>
         </ng-template>

@@ -44,6 +44,8 @@ export class PhoneNumberInternationalPrefixComponent implements OnChanges, Phone
     public countryCode: CountryCode;
     @Input()
     public disabled: boolean;
+    @Input()
+    public color: string;
     @Output()
     countryCodeChange: EventEmitter<CountryCode> = new EventEmitter<CountryCode>();
     @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
