@@ -35,6 +35,7 @@
             <mat-form-field>
                 <ngx-phone-number-international-prefix #ref="ngxPhoneNumberInternationalPrefix"
                                                        [formControl]="countryCodeControl"
+                                                       [color]="'accent'"
                                                        matPrefix></ngx-phone-number-international-prefix>
                 <ngx-phone-input [formControl]="phoneInputControl"
                                  [prefixProvider]="ref"
